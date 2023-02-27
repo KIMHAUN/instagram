@@ -10,6 +10,7 @@ var theme = ThemeData(
     )
   ),
 
+
   appBarTheme: AppBarTheme(
     color: Colors.white,
     elevation: 1, //그림자 크기
@@ -17,6 +18,10 @@ var theme = ThemeData(
     titleTextStyle: TextStyle(color: Colors.black, fontSize: 25),
   ),
   textTheme: TextTheme(
-      bodyText2: TextStyle(color: Colors.red)
+      bodyText2: TextStyle(color: Colors.black, ),
+      bodyText1: TextStyle(color: Colors.red),
+  ),
+  bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    selectedItemColor: Colors.black,
   ),
 );
