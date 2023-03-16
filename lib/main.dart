@@ -3,6 +3,8 @@ import 'style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 void main() {
   runApp(MaterialApp(
@@ -22,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
   var hide = false;
+  var userImage;
 
   getData() async {
     //Dio패키지 사용시 get요청 더 짧아짐. 오래 걸리는 코드 Future를 뱉는 함수.
@@ -52,11 +55,19 @@ class _MyAppState extends State<MyApp> {
         actions: [
           IconButton(
               icon: Icon(Icons.add_box_outlined),
-              onPressed: (){
+              onPressed: () async {
+                //사진선택화면 띄우기
+                var picker = ImagePicker();
+                var image = await picker.pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  setState(() {
+                    userImage = File(image.path);
+                  });
+                }
                 //MaterialApp들어있는 context
                 Navigator.push(context,
                     //return{} 는 =>로 대체가능.
-                    MaterialPageRoute(builder: (c) => Upload() )
+                    MaterialPageRoute(builder: (c) => Upload(userImage: userImage) )
                 );
               },
             iconSize: 30
@@ -176,7 +187,8 @@ class _HomeState extends State<Home> {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key}) : super(key: key);
+  const Upload({Key? key, this.userImage}) : super(key: key);
+  final userImage;
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +197,9 @@ class Upload extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Image.file(userImage),
           Text('이미지 업로드 화면'),
+          TextField(),
           IconButton(
             onPressed: (){
               Navigator.pop(context);
