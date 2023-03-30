@@ -25,6 +25,13 @@ class _MyAppState extends State<MyApp> {
   var data = [];
   var hide = false;
   var userImage;
+  var userContent;
+
+  setUserContent(a) {
+    setState((){
+      userContent = a;
+    });
+  }
 
   getData() async {
     //Dio패키지 사용시 get요청 더 짧아짐. 오래 걸리는 코드 Future를 뱉는 함수.
@@ -67,7 +74,7 @@ class _MyAppState extends State<MyApp> {
                 //MaterialApp들어있는 context
                 Navigator.push(context,
                     //return{} 는 =>로 대체가능.
-                    MaterialPageRoute(builder: (c) => Upload(userImage: userImage) )
+                    MaterialPageRoute(builder: (c) => Upload(userImage: userImage, setUserContent: setUserContent) )
                 );
               },
             iconSize: 30
@@ -101,13 +108,11 @@ class Home extends StatefulWidget {
   final data;
   var hide;
 
-
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-
   var scroll = ScrollController();
   var moreCount = 0;
 
@@ -125,6 +130,7 @@ class _HomeState extends State<Home> {
       return "no data";
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -135,9 +141,7 @@ class _HomeState extends State<Home> {
         //print('내려간당');
         //하단 바 숨김
         widget.hide = true;
-
       }
-
       if (scroll.position.pixels == scroll.position.maxScrollExtent) {
         getMoreData();
         print('더 볼 거 없음');
@@ -156,28 +160,27 @@ class _HomeState extends State<Home> {
           controller: scroll,
           itemBuilder: (BuildContext ctx, int idx) {
             return
-                  Column(
-                    //crossAxisAlignment: CrossAxisAlignment.start,
-                    //mainAxisAlignment: MainAxisAlignment.center,
-
-                    children: [
-                      Image.network(widget.data[idx]['image']),
-                      Container(
-                        constraints: BoxConstraints(maxWidth: 600),
-                        padding: EdgeInsets.all(20),
-                        width: double.infinity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('좋아요 ${widget.data[idx]['likes']}', style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(widget.data[idx]['date']),
-                            Text(widget.data[idx]['content']),
-                          ]
-                        )
+                Column(
+                  //crossAxisAlignment: CrossAxisAlignment.start,
+                  //mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.network(widget.data[idx]['image']),
+                    Container(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      padding: EdgeInsets.all(20),
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('좋아요 ${widget.data[idx]['likes']}', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(widget.data[idx]['date']),
+                          Text(widget.data[idx]['content']),
+                        ]
                       )
-                    ]
-                  );
+                    )
+                  ]
+                );
           });
     }
     else {
@@ -187,30 +190,41 @@ class _HomeState extends State<Home> {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage}) : super(key: key);
+  const Upload({Key? key, this.userImage, this.setUserContent}) : super(key: key);
   final userImage;
+  final setUserContent;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.file(userImage),
-          Text('이미지 업로드 화면'),
-          TextField(),
-          IconButton(
-            onPressed: (){
-              Navigator.pop(context);
-            },
-            icon: Icon(Icons.close)
+        appBar: AppBar(actions: [
+          IconButton(onPressed: () {
+
+          }, icon: Icon(Icons.send))
+        ]
+
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image.file(userImage),
+              Text('이미지 업로드 화면'),
+              TextField(onChanged: (text) {
+                setUserContent(text);
+                },
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(Icons.close)
+              ),
+            ],
           ),
-        ],
-      )
+        )
     );
   }
 }
-
 
 
