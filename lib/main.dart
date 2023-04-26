@@ -7,12 +7,18 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MaterialApp(
-    theme: style.theme,
-      home:  MyApp()
-  ));
+  runApp(
+    ChangeNotifierProvider(
+        create: (c) => Store(),
+      child: MaterialApp(
+          theme: style.theme,
+          home:  MyApp()
+      )
+    )
+   );
 }
 
 class MyApp extends StatefulWidget {
@@ -287,14 +293,51 @@ class Upload extends StatelessWidget {
   }
 }
 
+class Store extends ChangeNotifier {
+  var name = 'haun kim';
+  var follower = 0;
+  var followed = false;
+  changeName() {
+    name = 'john park';
+    notifyListeners(); //재랜더링 해줘
+  }
+  following() {
+    followed = !followed;
+    if (followed) {
+      follower ++;
+    } else {
+      follower --;
+    }
+    notifyListeners();
+
+  }
+}
+
 class Profile extends StatelessWidget {
   const Profile({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Text('프로필 페이지'),
+      appBar: AppBar(title: Text(context.watch<Store>().name)),
+      body:
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          IconButton(onPressed: () {
+
+
+          },
+              icon: Icon(Icons.circle)
+          ),
+          Text("팔로워 ${context.watch<Store>().follower} 명 "),
+          ElevatedButton(onPressed: (){
+            //context.read<Store>().changeName();
+            context.read<Store>().following();
+          }, child: Text('팔로우'))
+        ]
+      )
+
     );
   }
 }
