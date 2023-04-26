@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -27,8 +29,35 @@ class _MyAppState extends State<MyApp> {
   var userImage;
   var userContent;
 
+  saveData() async {
+    var storage = await SharedPreferences.getInstance();
+    storage.setString('name', 'john');
+    storage.setStringList('bool', ['dsfsd', 'sdklfjsdkl']);
+    storage.remove('ndfas');
+    var map = {'age' : 20};
+    storage.setString('map', jsonEncode(map)); //Map자료 저장하려면 JSON(String)으로 바꿔서 저장.
+    var result = storage.getString('map') ?? '없는데요'; //null check
+    print(jsonDecode(result)['age']);
+
+  }
+
+  addData(userImage) {
+    var newData = {
+      'id' : data.length,
+      'image': userImage,
+      'likes': 0,
+      'date': 'Apr 15',
+      'content': userContent,
+      'liked': false,
+      'user': 'Jerry_park'
+    };
+    setState(() {
+      data.insert(0, newData);
+    });
+  }
+
   setUserContent(a) {
-    setState((){
+    setState(() {
       userContent = a;
     });
   }
@@ -51,6 +80,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    saveData();
     getData();
   }
 
@@ -74,7 +104,8 @@ class _MyAppState extends State<MyApp> {
                 //MaterialApp들어있는 context
                 Navigator.push(context,
                     //return{} 는 =>로 대체가능.
-                    MaterialPageRoute(builder: (c) => Upload(userImage: userImage, setUserContent: setUserContent) )
+                    MaterialPageRoute(builder: (c) => Upload(
+                        userImage: userImage, setUserContent: setUserContent,addData: addData) )
                 );
               },
             iconSize: 30
@@ -153,18 +184,22 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     //데이터가 도착하면 위젯 보여주세요
     //첫 클래스 안에 있던 변수 사용은 widget.변수명
-    print(widget.data);
+
     if (widget.data.isNotEmpty) {
       return ListView.builder(
           itemCount: widget.data.length,
           controller: scroll,
           itemBuilder: (BuildContext ctx, int idx) {
+            //print(widget.data[idx]['image'].runtimeType);
             return
                 Column(
                   //crossAxisAlignment: CrossAxisAlignment.start,
                   //mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.network(widget.data[idx]['image']),
+                    //폰에서 고른 이미지는 Image.file
+                    widget.data[idx]['image'].runtimeType == String ?
+                    Image.network(widget.data[idx]['image']) : Image.file(widget.data[idx]['image']),
+
                     Container(
                       constraints: BoxConstraints(maxWidth: 600),
                       padding: EdgeInsets.all(20),
@@ -173,6 +208,30 @@ class _HomeState extends State<Home> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+//Text에 기능 추가
+                          GestureDetector(
+                            child : Text(widget.data[idx]['user']),
+                            onTap: () {
+                              try {
+                                Navigator.push(context,
+                                //MaterialRouteBuilder
+                                //CupertinoPageRoute :  아이폰꺼
+                                PageRouteBuilder(
+                                    pageBuilder: (c, a1, a2) => Profile(),
+                                  transitionsBuilder: (c, a1, a2, child) =>
+                                  //child: 새로 띄울 페이지(Profile)
+                                  //c : context
+                                  //a1: animation object 페이지 덮어질 때 페이지 전환 얼마나 되었는지 0~1로 표시 페이지 전환 다되면 1
+                                  //a2 : 애니메이션 오브젝트 기존 페이지에 애니메이션 주고싶을 때.
+                                      FadeTransition(opacity: a1, child: child),
+                                  transitionDuration: Duration(milliseconds: 500)
+                                )
+                                );
+                              } catch (e, s) {
+                                print(s);
+                              }
+                            },
+                          ),
                           Text('좋아요 ${widget.data[idx]['likes']}', style: TextStyle(fontWeight: FontWeight.bold)),
                           Text(widget.data[idx]['date']),
                           Text(widget.data[idx]['content']),
@@ -190,20 +249,21 @@ class _HomeState extends State<Home> {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage, this.setUserContent}) : super(key: key);
+  const Upload({Key? key, this.userImage, this.setUserContent, this.addData}) : super(key: key);
   final userImage;
   final setUserContent;
+  final addData;
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(actions: [
           IconButton(onPressed: () {
-
-          }, icon: Icon(Icons.send))
-        ]
-
-        ),
+            addData(userImage);
+            Navigator.pop(context);
+           }, icon: Icon(Icons.send))
+        ]),
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,6 +283,18 @@ class Upload extends StatelessWidget {
             ],
           ),
         )
+    );
+  }
+}
+
+class Profile extends StatelessWidget {
+  const Profile({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Text('프로필 페이지'),
     );
   }
 }
