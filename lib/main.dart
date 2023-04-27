@@ -11,8 +11,11 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-        create: (c) => Store(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (c)=> Store()),
+        ChangeNotifierProvider(create: (c)=> Store2()),
+      ],
       child: MaterialApp(
           theme: style.theme,
           home:  MyApp()
@@ -293,10 +296,22 @@ class Upload extends StatelessWidget {
   }
 }
 
+class Store2 extends ChangeNotifier {
+  var name = 'john kim';
+}
+
 class Store extends ChangeNotifier {
   var name = 'haun kim';
   var follower = 0;
   var followed = false;
+  var profileImage = [];
+  getData() async{
+    var result = await http.get(Uri.parse('https://codingapple1.github.io/app/profile.json'));
+    var profiles = jsonDecode(result.body);
+    profileImage = profiles;
+    notifyListeners();
+  }
+
   changeName() {
     name = 'john park';
     notifyListeners(); //재랜더링 해줘
@@ -309,37 +324,60 @@ class Store extends ChangeNotifier {
       follower --;
     }
     notifyListeners();
-
   }
 }
 
 class Profile extends StatelessWidget {
   const Profile({Key? key}) : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.watch<Store>().name)),
-      body:
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      appBar: AppBar(title: Text(context.watch<Store2>().name)),
+      body:CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: ProfileHeader(),
+          ),
+          SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                  (c, i)=> Image.network(context.read<Store>().profileImage[i]),
+                childCount: context.read<Store>().profileImage.length,
+              ), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+          )
+        ],
+      )
+    );
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return  Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          IconButton(onPressed: () {
-
-
-          },
-              icon: Icon(Icons.circle)
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.grey,
+            //backgroundImage: ,
           ),
           Text("팔로워 ${context.watch<Store>().follower} 명 "),
           ElevatedButton(onPressed: (){
             //context.read<Store>().changeName();
             context.read<Store>().following();
-          }, child: Text('팔로우'))
+          }, child: Text('팔로우')),
+          ElevatedButton(onPressed: (){
+            //context.read<Store>().changeName();
+            context.read<Store>().getData();
+          }, child: Text('사진 가져오기'))
         ]
-      )
-
     );
   }
 }
+
 
 
