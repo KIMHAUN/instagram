@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:instagram/shop.dart';
+import 'notification.dart';
 import 'style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -8,8 +10,17 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+
+void main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     MultiProvider(
       providers: [
@@ -89,6 +100,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    initNotification(context);
     saveData();
     getData();
   }
@@ -96,6 +108,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(child: Text("+"), onPressed: (){
+        //showNotification();
+        showNotification2();
+      },),
       appBar: AppBar(
         title: Text("instagram"),
         actions: [
@@ -123,7 +139,7 @@ class _MyAppState extends State<MyApp> {
       ),
       body: [
         Home(data: data, hide:hide),
-        Text("샵")][tab],
+        Shop()][tab],
 
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: false,
@@ -378,6 +394,7 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 }
+
 
 
 
